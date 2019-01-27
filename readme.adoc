@@ -17,7 +17,7 @@ All code in these examples assumes that you have bpjs in your `$PATH`/`%PATH%` e
 [WARNING]
 You must use the uber jar, which contains dependencies used by BPjs (such as Mozilla Rhino).
 
-[NOTE]
+[TIP]
 BPjs jars are available from BPjs' GitHub https://github.com/bThink-BGU/BPjs/releases[releases page].
 
 == Files
