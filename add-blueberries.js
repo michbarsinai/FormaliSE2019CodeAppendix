@@ -1,3 +1,11 @@
+/* global bp */
+
+/////////////////////
+//  
+// Code for adding blueberries safely.
+//  
+/////////////////////
+
 var BLUEBERRIES = bp.Event("ADD_BLUEBERRIES");
 
 /**

@@ -1,5 +1,12 @@
 /* global bp */
 
+/////////////////////
+//  
+// Core b-threads for the pancake server.
+//  
+/////////////////////
+
+
 var ADD_DRY = bp.Event("ADD_DRY");
 var ADD_WET = bp.Event("ADD_WET");
 var RELEASE = bp.Event("RELEASE_BATTER");

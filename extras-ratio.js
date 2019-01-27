@@ -1,8 +1,18 @@
 /* global bp */
 
-////
-// Refills 
-////
+/////////////////////
+//  
+//  Contains code to balance blueberries and kale. This file is 
+//  self-contained and does not require the rest of the b-threads, 
+//  such as AddDry. B-thread `script` below, requests an event that
+//  throws the system into a b-program-hot cycle.
+//  
+/////////////////////
+
+
+/**
+ * An event set that contains all extras addition events (blueberries and kale).
+ */
 var ADD_EXTRAS = bp.EventSet("sADD_EXTRAS", function(e){
  return e.name.equals("ADD_EXTRAS");
 });

@@ -1,7 +1,9 @@
 /* global bp */
 
 /////
+//
 // A b-thread that limits the thickness of the batter to [-2, 2].
+//
 /////
 
 var THICKNESS_BOUND = 2;

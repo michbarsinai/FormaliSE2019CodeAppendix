@@ -1,27 +1,36 @@
 = Code Examples
 
-[NOTE]
-All code in this examples assume that you have bpjs in the `$PATH` environment variable. As an alternative, one can replace the `bpjs` command with `java -jar BPjs-0.9.7.uber.jar` (or any other version later than 0.9.7).
+This repository contains code accompanying submission 12 to FormaliSE 2019.
+
+All code in these examples assumes that you have bpjs in your `$PATH`/`%PATH%` environment variable. As an alternative, one can replace the `bpjs` command with `java -jar BPjs-0.9.7.uber.jar` (or any other version later than 0.9.7).
 
 [WARNING]
-You must use the uber jar, that contains dependencies used by BPjs (such as Mozilla Rhino).
+You must use the uber jar, which contains dependencies used by BPjs (such as Mozilla Rhino).
+
+[NOTE]
+BPjs jars are available from BPjs' GitHub https://github.com/bThink-BGU/BPjs/releases[releases page].
 
 == Files
 
 pancake-core.js::
     The two core b-threads, adding dry and wet mixture doses.
 
-thickness-limiter.js::
+strict-arbiter.js::
+    A thread that limits batter thickness during preparation, by ensuring that after each
+    addition of dry mixture, a dose of wet mixture is added. This is a form of over-specification, since
+    we need the batter thickness to be within a range that's much broader that `[-1,0]`.
+
+range-arbiter.js::
     A b-thread that limits the thickness of the batter to have an absolute value less than, or equal to, `THICKNESS_BOUND`. This b-thread announces the current thickness using an event. Additionally, this file contains the definition of the `THICKNESS_EVENTS` event set, and the `THICKNESS_BOUND` value.
 
-thickness-limiter-faulty.js::
+range-arbiter-faulty.js::
     Same as above, but using an off-by-one threshold, dropping the _...or equals to_ clause.
 
 add-blueberries.js::
-    Contains a b-thread that adds blueberries, and other b-threads that prevent this addition when the batter is not ready yet.
+    Contains a b-thread that adds blueberries, and other b-threads that block this addition when the batter is not ready.
 
 add-blueberries-verify.js::
-    Contains a b-thread that verifies that blueberries were indeed added.
+    Contains a b-thread that verifies that blueberries were indeed added, at least once.
 
 pancake-core-repeat.js::
     The pancake code threads, in an infinite loop. When all the doses are added, a new b-thread requests a `ReleaseBatter` event, and the loop restarts.
@@ -32,30 +41,30 @@ add-blueberries-repeat.js::
 == Execution Examples
 
 === Simple Run
-5 doses of each mixture, just running.
+Sanity test - 5 doses of each mixture, just running.
 
   $ bpjs pancake-core.js
 
 === Run with a limited thickness
 
-  $ bpjs pancake-core.js thickness-monitor.js thickness-limiter.js
+  $ bpjs pancake-core.js thickness-meter.js range-arbiter.js
 
-=== Demonstrate the thickness-limiter-faulty is indeed faulty
+=== Demonstrate the range-arbiter-faulty.js is indeed faulty
 
-  $ bpjs --verify  pancake-core.js thickness-monitor.js thickness-limiter-faulty.js thickness-verify.js
+  $ bpjs --verify  pancake-core.js thickness-meter.js range-arbiter-faulty.js thickness-verify.js
 
 === Find cases where blueberries are not added
 
 Looking at blueberry addition as a liveness requirement (note the `--liveness` switch)
 
-  $  bpjs --verify --liveness pancake-core.js thickness-monitor.js thickness-limiter.js add-blueberries.js add-blueberries-verify.js
+  $  bpjs --verify --liveness --full-state-storage pancake-core.js thickness-meter.js range-arbiter.js add-blueberries.js add-blueberries-verify.js
 
 Looking at blueberry addition as a deadlock issue (same commandline, but no `--liveness`). This will fail verification due to a deadlock between the b-thread requesting the addition and the b-thread blocking that addition due to batter thickness. This deadlock is an implementation detail, though; the real specification violated here is the fact that blueberries were not added (hot termination).
 
-  $  bpjs --verify pancake-core.js thickness-monitor.js thickness-limiter.js add-blueberries.js add-blueberries-verify.js
+  $  bpjs --verify --full-state-storage pancake-core.js thickness-meter.js range-arbiter.js add-blueberries.js add-blueberries-verify.js
 
 === Find an infinite run were blueberries are never added
 
-Using `--max-trace-length` to limit the length of the search, as there are short violating cycles. Using `--full-state-storage` to ensure no hash collisions happen.
+Using `--max-trace-length` to limit the length of the search, as there are short violating cycles, so we want to do a shallow, wide search instead of a narrow, deep one. Using `--full-state-storage` to ensure no hash collisions happen.
 
   $ bpjs  --max-trace-length=100  --full-state-storage --verify  pancake-core-repeat.js  add-blueberries-verify.js add-blueberries-repeat.js
