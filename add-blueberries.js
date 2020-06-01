@@ -1,11 +1,3 @@
-/* global bp */
-
-/////////////////////
-//  
-// Code for adding blueberries safely.
-//  
-/////////////////////
-
 var BLUEBERRIES = bp.Event("ADD_BLUEBERRIES");
 
 /**
@@ -29,8 +21,8 @@ bp.registerBThread("EnoughBatterForBlueberries", function(){
  * Can only add blueberries when the batter is thin enough.
  */
 bp.registerBThread("BatterThinEnough", function(){
+    var block;
     while ( true ) {
-        var block;
         var thicknessEvt = bp.sync({
               waitFor:THICKNESS_EVENTS,
                 block:block,

@@ -1,10 +1,8 @@
 /* global bp */
 
 ////
-//
 // A b-thread that measures the thickness of the batter,
 // and announces it using an event.
-//
 ////
 
 var THICKNESS_EVENTS = bp.EventSet("Thickness", function(e){

@@ -1,14 +1,5 @@
 /* global bp */
 
-/////////////////////
-//  
-// Core pancake batter mixer controller. 
-// plain pancake batter. Batter thickness
-// is unconstrained during preparation process.
-//  
-/////////////////////
-
-
 var ADD_DRY = bp.Event("ADD_DRY");
 var ADD_WET = bp.Event("ADD_WET");
 
