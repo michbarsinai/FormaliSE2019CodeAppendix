@@ -1,0 +1,39 @@
+ifndef::env-github[:icons: font]
+ifdef::env-github[]
+:status:
+:outfilesuffix: .adoc
+:caution-caption: :fire:
+:important-caption: :exclamation:
+:note-caption: :page_with_curl:
+:tip-caption: :bulb:
+:warning-caption: :warning:
+endif::[]
+
+= BPJ-Maze
+
+A maze simulation b-program based on link:../BPJ-equal[BPJ-equal]. Files link:run-1.txt[] to link:run-5.txt[] contain the execution summary of JPF, using various parameters and over various programs. The specific details are noted in these files.
+
+== Running the code here
+
+[TIP]
+The code snippets below assume that the path to JPF is in `$JPF`
+
+* Just run a 7x7 maze:
+
+    $JPF/bin/jpf +classpath=lib/BPj-equal.jar:dist/BPj-Maze.jar bpj.maze.BPjMaze
+
+* With more memory, on a 10x10 maze:
+
+    JVM_FLAGS=-Xmx8g $JPF/bin/jpf BPJ-Maze.jpf 10
+
+* With random enumeration
+
+    $JPF/bin/jpf +cg.enumerate_random=true +classpath=lib/BPj-equal.jar:dist/BPj-Maze.jar bpj.maze.BPjMaze
+
+* To run the execution performance test, use the `bpj.maze.BPjMazeWalkPerformanceTest` class:
+
+    java -cp lib/BPj-equal.jar:dist/BPj-Maze.jar bpj.maze.BPjMazeWalkPerformanceTest
+
+[WARNING]
+Libraries and binaries need to be compiled for Java8. A recent version of Java 8 must be used, because JPF uses some low-level classes that are not present in, e.g., 1.8.0._161. We used 1.8.0_201 for our tests.
+

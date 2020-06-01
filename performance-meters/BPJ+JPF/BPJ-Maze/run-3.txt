@@ -1,0 +1,17 @@
+Using bounded random BPJ
+Using enumerate_random
+
+====================================================== results
+no errors detected
+
+====================================================== statistics
+elapsed time:       00:03:05
+states:             new=498774,visited=1126018,backtracked=1624792,end=33
+search:             maxDepth=547,constraints=0
+choice generators:  thread=498582 (signal=29080,lock=42225,sharedRef=420542,threadApi=3,reschedule=6732), data=192
+heap:               new=228667,released=629207,maxLive=1174,gcCycles=1608563
+instructions:       15735924
+max memory:         653MB
+loaded code:        classes=170,methods=3058
+
+====================================================== search finished: 3/20/19 10:03 AM

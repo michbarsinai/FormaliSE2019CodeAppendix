@@ -1,0 +1,18 @@
+Running maze of size 1
+Using bounded BPJ equals
+Using enumerate_random
+
+====================================================== results
+no errors detected
+
+====================================================== statistics
+elapsed time:       00:01:25
+states:             new=438568,visited=1040321,backtracked=1478889,end=16
+search:             maxDepth=564,constraints=0
+choice generators:  thread=438568 (signal=25546,lock=47462,sharedRef=361306,threadApi=3,reschedule=4251), data=0
+heap:               new=393204,released=459430,maxLive=634,gcCycles=1448862
+instructions:       14891234
+max memory:         651MB
+loaded code:        classes=113,methods=2182
+
+====================================================== search finished: 3/20/19 10:19 AM

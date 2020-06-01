@@ -1,0 +1,17 @@
+ifndef::env-github[:icons: font]
+ifdef::env-github[]
+:status:
+:outfilesuffix: .adoc
+:caution-caption: :fire:
+:important-caption: :exclamation:
+:note-caption: :page_with_curl:
+:tip-caption: :bulb:
+:warning-caption: :warning:
+endif::[]
+
+= BPJ Equal
+
+A BPJ fork that ignores thread priorities when selecting events. This event selection algorithm allows the robot to perform a random walk in the simulated maze.
+
+[TIP]
+This is a link:https://netbeans.apache.org[NetBeans] project, and can also be built using link:https://ant.apache.org[Apache Ant].

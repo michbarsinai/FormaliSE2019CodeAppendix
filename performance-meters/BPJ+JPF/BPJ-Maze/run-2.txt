@@ -1,0 +1,17 @@
+Using bounded BPJ equals
+Not using enumerate_random
+
+====================================================== results
+no errors detected
+
+====================================================== statistics
+elapsed time:       00:01:46
+states:             new=291469,visited=664731,backtracked=956200,end=17
+search:             maxDepth=539,constraints=0
+choice generators:  thread=291469 (signal=18011,lock=25538,sharedRef=244753,threadApi=3,reschedule=3164), data=0
+heap:               new=147568,released=326882,maxLive=1173,gcCycles=941997
+instructions:       9618374
+max memory:         653MB
+loaded code:        classes=170,methods=3058
+
+====================================================== search finished: 3/20/19 9:56 AM

@@ -1,0 +1,18 @@
+a 2x2 maze, 16G
+Using bounded BPJ-equals
+Using enumerate_random
+
+====================================================== results
+error #1: gov.nasa.jpf.vm.NoOutOfMemoryErrorProperty
+
+====================================================== statistics
+elapsed time:       00:08:31
+states:             new=300188,visited=0,backtracked=0,end=0
+search:             maxDepth=300188,constraints=1
+choice generators:  thread=299263 (signal=5559,lock=15758,sharedRef=277930,threadApi=6,reschedule=10), data=926
+heap:               new=49854,released=47333,maxLive=2533,gcCycles=298310
+instructions:       5449507
+max memory:         13466MB
+loaded code:        classes=113,methods=2182
+
+====================================================== search finished: 3/20/19 10:36 AM

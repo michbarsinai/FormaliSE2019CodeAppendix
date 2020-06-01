@@ -1,0 +1,5 @@
+classpath=lib/BPj-equal-boundedRand.jar,dist/BPj-Maze.jar
+# classpath=lib/BPj-equal-ubounded.jar,dist/BPj-Maze.jar
+target=bpj.maze.BPjMaze
+cg.enumerate_random=true
+# cg.randomize.def=random

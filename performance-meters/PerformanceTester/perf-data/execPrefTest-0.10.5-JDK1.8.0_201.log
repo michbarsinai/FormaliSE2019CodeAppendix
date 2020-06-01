@@ -1,0 +1,77 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ----------------< il.ac.bgu.cs.bp:BPjs-PerformanceTest >----------------
+[INFO] Building BPjs-PerformanceTest 0.1-DEV
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- maven-clean-plugin:2.5:clean (default-clean) @ BPjs-PerformanceTest ---
+[INFO] Deleting /Users/michael/Documents/PhD/Thesis/Papers/ours/BPjs-Paper-all/BPjs-SCP-OSP_CodeAppendix/PerformanceTester/target
+[INFO] 
+[INFO] --- maven-resources-plugin:2.6:resources (default-resources) @ BPjs-PerformanceTest ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] Copying 5 resources
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.1:compile (default-compile) @ BPjs-PerformanceTest ---
+[INFO] Changes detected - recompiling the module!
+[INFO] Compiling 5 source files to /Users/michael/Documents/PhD/Thesis/Papers/ours/BPjs-Paper-all/BPjs-SCP-OSP_CodeAppendix/PerformanceTester/target/classes
+[INFO] 
+[INFO] --- exec-maven-plugin:1.6.0:java (default-cli) @ BPjs-PerformanceTest ---
+#warmup
+968
+#warmup done
+5,329
+5,307
+5,330
+5,256
+5,227
+5,215
+5,285
+5,293
+5,308
+5,198
+10,547
+10,510
+10,557
+10,511
+10,540
+10,497
+10,522
+10,551
+10,498
+10,525
+20,1529
+20,1538
+20,1542
+20,1524
+20,1520
+20,1517
+20,1521
+20,1531
+20,1560
+20,1520
+50,11451
+50,11306
+50,11201
+50,10959
+50,11444
+50,11345
+50,11593
+50,11399
+50,11509
+50,11640
+100,66011
+100,66938
+100,66160
+100,67032
+100,66586
+100,65233
+100,66138
+100,67307
+100,65164
+100,65282
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  13:21 min
+[INFO] Finished at: 2020-04-30T23:02:45+03:00
+[INFO] ------------------------------------------------------------------------

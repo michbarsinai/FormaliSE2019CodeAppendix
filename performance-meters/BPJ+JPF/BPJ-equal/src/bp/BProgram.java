@@ -1,0 +1,946 @@
+package bp;
+
+import static bp.eventSets.EventSetConstants.none;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.TreeMap;
+
+import bp.eventSets.EventSetInterface;
+import bp.eventSets.RequestableInterface;
+import bp.exceptions.BPJConcurrencyException;
+import bp.exceptions.BPJDuplicateBthreadException;
+import bp.exceptions.BPJDuplicateJavaThreadException;
+import bp.exceptions.BPJDuplicatePrioritiesException;
+import bp.exceptions.BPJException;
+import bp.exceptions.BPJJavaThreadEndException;
+import bp.exceptions.BPJMissingBThreadException;
+import bp.exceptions.BPJRequestableSetException;
+import bp.exceptions.BPJSystemErrorException;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Random;
+import java.util.Set;
+
+public class BProgram {
+
+	/**
+	 * A set containing all the b-threads in the system. A b-thread adds itself
+	 * to the list either - in its constructor and removes itself when its run()
+	 * function finishes - or a Java thread adds itself and removes itself
+	 * explicitly
+	 */
+	TreeMap<Double, BThread> allBThreads;
+
+	/**
+	 * A counter that counts how many of the b-thread in allBThreads are busy.
+	 * B-Threads decrement this counter when they get into bSync just before
+	 * they become dormant and wait to be awaken. When the counter gets to zero,
+	 * the b-thread that decremented it from one to zero, awakes other b-threads
+	 * and sets the counter to the number of b-threads that it awakes (the
+	 * number of b-threads that are waiting to the next event)
+	 */
+	int busyBThreads = 0;
+
+	/**
+	 * A variable counting the number of events fired since the beginning of the
+	 * execution
+	 */
+	// the index of the last event (= number of events -1)
+	public int choicePointCounter = -1;
+	int eventCounter = 0;
+//	int lastEventCounter = 0;
+
+	/**
+	 * A variable containing the last fired event.
+	 */
+	public Event lastEvent;
+	// Keep a pointer to the BT whose request for "lastEvent" is the one
+	// that was triggered.
+	private BThread bThreadOfLastEvent;
+
+	private Object error = null;
+	
+	/**
+	 * A semaphore for controlling concurrency. Uses: - during model checking -
+	 * reduce thread-scheduling alternatives - compare performance to other
+	 * programming approaches (makes BP synchronization look more like a
+	 * case-statement with the added ease of continuation without needing to
+	 * manage state.
+	 * 
+	 * The semaphore is acquired when a b-thread is awakened or started, and
+	 * released when a b-thread is awakened, or ends.
+	 * 
+	 */
+	public Concurrency concurrency;
+	/**
+	 * Trace generator for generating the trace of the run.
+	 */
+	TraceGenerator tracegen;
+
+	private String name = "vislog";
+
+	static final int PRIORITY = 0;
+	static final int LEARNING = 1;
+
+	/**
+	 * Indicates the maximal distance between two BThread priorities that may be
+	 * considered as the same priority
+	 */
+	double bThreadEpsilon = 0;
+
+	/**
+	 * Indicates whether this program is executed in iterative mode
+	 */
+	boolean iterativeMode = false;
+
+	/**
+	 * Indicates the event choice policy Choose between the constants: PRIORITY
+	 * (default), LEARNING
+	 */
+	int eventChoicePolicy = PRIORITY;
+
+	/**
+	 * Indicates the number of the latest event in the last run for which there
+	 * are more choices to execute (An open non-det choice exists).
+	 */
+	int lastBranch = -1;
+
+	/**
+	 * Indicates the number of the latest event in the current run for which
+	 * there are more choices to execute
+	 */
+	int currentBranch = -1;
+
+	int iter = 0;
+
+	/**
+	 * Holds the data needed for iterative execution
+	 */
+	ArrayList<ChoicePoint> choicePoints = new ArrayList<ChoicePoint>();
+
+	/**
+	 * Stores the strings of the events that occurred in this run
+	 */
+	ArrayList<String> eventLog = new ArrayList<String>();
+	
+	/**
+	 * The number of event Strings to be saved in the list
+	 */
+	int eventLogSize = 100;
+	
+	/**
+	 * Indicates whether this program is executed in DEBUG mode E.g. issue debug
+	 * msgs.
+	 */
+	boolean debugMode = false;
+
+	/**
+	 * Indicates whether this program is executed in LOG mode E.g. issue EVENT
+	 * occurrence messages .
+	 */
+	boolean logMode = true;
+    
+    Random random = new Random();
+    
+	@SuppressWarnings("unchecked")
+	// map from a thread to its BThread
+	// Required for non behavioral threads that add themselves to BPrograms
+	// later.
+	HashMap<Thread, BThread> threadToBThreadMap = new HashMap();
+
+	public BProgram() {
+
+		tracegen = new TraceGenerator(this);
+		concurrency = new Concurrency();
+		allBThreads = new TreeMap<Double, BThread>();
+	}
+
+	public BProgram(String name) {
+		this();
+		this.name = name;
+
+	}
+
+	public BProgram(double bThreadEpsilon) {
+		this();
+		this.bThreadEpsilon = bThreadEpsilon;
+	}
+
+	public void setBThreadEpsilon(double eps) {
+		this.bThreadEpsilon = eps;
+	}
+
+	public void setIterativeMode(boolean mode) {
+		this.iterativeMode = mode;
+	}
+
+	public void setDebugMode(boolean mode) {
+		this.debugMode = mode;
+	}
+
+	/**
+	 * Sets the error that occurred during the run, to make BProgram terminate 
+	 * at the next bSync and print the error.
+	 *  
+	 * @param error An Object of the error occurred during the run - better have
+	 * an informative toString().
+	 */
+	public void setError(Object error) {
+		this.error = error;
+	}
+
+	public Object getError() {
+		return error;
+	}
+
+	/**
+	 * Add a b-thread. Hereafter, the b-thread is counted in the list of all
+	 * b-threads as busy. This allows, for example, to add a new b-thread
+	 * dynamically (based on a precondition) in a way that assures that new
+	 * events are not triggered before the thread of the new b-thread starts
+	 * running.
+	 * 
+	 * The Java thread is created later - during start().
+	 * 
+	 * @return
+	 * @throws BPJDuplicatePrioritiesException
+	 */
+	public BThread add(BThread bt, Double priority)
+			throws BPJDuplicatePrioritiesException,
+			BPJDuplicateBthreadException {
+		synchronized (allBThreads) {
+
+			if (allBThreads.containsKey(priority)) {
+				throw new BPJDuplicatePrioritiesException(allBThreads
+						.get(priority), bt);
+			}
+			if (bt.getBProgram() != null) // was already assigned, cancel
+				throw new BPJDuplicateBthreadException(bt);
+
+			// Count the b-thread as busy
+			busyBThreads++;
+
+			// Add the b-thread to the b-threads set
+			bt.priority = priority;
+			bt.setBProgram(this);
+			allBThreads.put(priority, bt);
+		}
+		return bt;
+	}
+
+	// add the calling (currently running) Java thread as a b-thread.
+	// returns the new b-thread;
+	public BThreadForJavaThread add(Double priority) throws BPJException {
+		synchronized (allBThreads) {
+			if (concurrency.control) {
+				throw new BPJConcurrencyException(); // not supported (yet) with
+				// ordinary Java threads
+			}
+
+			Thread th = Thread.currentThread();
+			if (allBThreads.containsKey(priority)) {
+				throw new BPJDuplicatePrioritiesException(allBThreads
+						.get(priority), null);
+			}
+			if (threadToBThreadMap.get(th) != null) {
+				throw new BPJDuplicateJavaThreadException(th);
+			}
+			BThreadForJavaThread bt = new BThreadForJavaThread(th);
+			threadToBThreadMap.put(th, bt);
+			// add this new bthread as usual
+			add(bt, priority);
+
+			return bt;
+			// no need to start this b-Thread. It is already running.
+		}
+
+	}
+
+	// Add with name
+	public BThreadForJavaThread add(String btname, Double priority)
+			throws BPJException {
+		BThreadForJavaThread newbt = add(priority);
+		newbt.setName(btname);
+		return newbt;
+
+	}
+
+	// Remove the running Java thread that had added itself as a b-thread during
+	// run
+	public void remove() throws BPJException {
+		Thread th = Thread.currentThread();
+		BThread bt = threadToBThreadMap.get(th);
+		if (bt == null) {
+			throw new BPJMissingBThreadException(th);
+		}
+		if (bt.getClass() != BThreadForJavaThread.class)
+			throw new BPJJavaThreadEndException();
+		// indicate you are on your way out
+		bt.thread = null;
+		bt.getBProgram().bSync(none, none, none);
+
+	}
+
+	/**
+	 * Awake or interrupt all b-threads that are affected by lastEvent. The
+	 * calling b-thread is a special case because it cannot be awaken (since it
+	 * is not waiting yet). For the calling b-thread, we use the return value
+	 * which indicates whether it has to wait for another b-thread to awake it
+	 * or it is awaken by itself, i.e., it does not need to wait.
+	 * 
+	 * @return A flag that indicates whether this b-thread awakes itself, i.e.,
+	 *         does not need to wait for another b-thread to awake it
+	 */
+	private boolean awakeWaitingBThreads(BThread thisBT) {
+
+		boolean continueImmediately = false;
+
+		// Increment the number of busy b-threads
+		for (BThread bt : allBThreads.values()) {
+			if (bt.watchedEvents.contains(lastEvent)
+					|| bt.interruptingEvents.contains(lastEvent)
+					|| bt.isRequested(lastEvent)) {
+				busyBThreads++;
+			}
+		}
+
+		// Interrupt and notify the b-threads that need to be awaken
+		for (BThread bt : allBThreads.values()) {
+
+			if (bt.interruptingEvents.contains(lastEvent)) {
+//				BThread	bt1 = ((JavaThreadForBThread) Thread.currentThread()).bt;
+//				debugPrint(bt + " interrupted in awake"); /**********/
+
+//				if (bt.thread == null){
+//					System.out.println(bt + " is null");
+//				}else{
+					bt.thread.interrupt();
+//				}
+			} else if (bt.watchedEvents.contains(lastEvent)
+					|| bt.isRequested(lastEvent)) {
+				// if (bt.watchedEvents.contains(lastEvent) ) {
+
+				if (bt == thisBT) {
+
+					// Notifying the current b-thread is meaningless because it
+					// is not waiting yet. Instead, we mark that there is no
+					// need to wait.
+					continueImmediately = true;
+
+				} else {
+					synchronized (bt) {
+						bt.notify();
+					}
+				}
+			}
+		}
+		
+		if (thisBT.interruptingEvents.contains(lastEvent)) {
+//			System.out.println(thisBT + " is going to bWait in awake"); /**********/
+//			thisBT.thread.interrupt(); // unnecessary, depending on the above "else"
+			thisBT.bWait();
+		}
+
+		return continueImmediately;
+	}
+
+	/**
+	 * Wait for the next event. Sleep until all b-threads call this function.
+	 * 
+	 * @param btID
+	 *            The b-thread that called this function.
+	 * 
+	 * 
+	 */
+	public void bSync(RequestableInterface requestedEvents,
+			EventSetInterface watchedEvents, EventSetInterface blockedEvents)
+			throws BPJException {
+
+		boolean continueImmediately = false;
+		BThread bt;
+
+		// Go from running Java thread to b-thread.
+		// The "if" below is for optimization. The "else" part should work for
+		// all
+		Thread currentThread = Thread.currentThread();
+		if (currentThread.getClass() == JavaThreadForBThread.class) {
+			bt = ((JavaThreadForBThread) currentThread).bt;
+		} else {
+			bt = threadToBThreadMap.get(currentThread);
+		}
+
+		if (bt == null) {
+			throw new BPJMissingBThreadException(currentThread);
+		}
+		synchronized (bt) {
+
+			// The code is synchronized on allBThreads to make sure that only
+			// one b-thread is in bSync at a time
+			synchronized (allBThreads) {
+
+				// Store parameters in object variables for inspection by other
+				// threads
+				bt.requestedEvents = requestedEvents;
+				bt.watchedEvents = watchedEvents;
+				bt.blockedEvents = blockedEvents;
+
+				// Remove this b-thread from the count of busy b-threads because
+				// it
+				// is about to sleep or choose the next event
+				busyBThreads--;
+
+				// If end of b-thread, remove the b-thread from allBThreads and
+				// mark for immediate exit (don't wait at the end of the
+				// function)
+				if (bt.thread == null) {
+					allBThreads.remove(bt.priority);
+					threadToBThreadMap.remove(currentThread);
+					continueImmediately = true;
+					// if no more b-threads exist, also wake up
+					// any thread that is waiting for this.
+					// note that this doesn't really mean that the
+					// b-program "finished" - more dynamic b-threads
+					// may be added.
+					if (allBThreads.size() == 0) {
+//						System.out.println("Last BT: " + bt); /*************/
+//						System.out.println("busyBThreads: "+busyBThreads); /*************/
+						allBThreads.notifyAll();
+						return;
+					}
+				}
+
+				// If this b-thread is the last to be counted as not busy, the
+				// next event is chosen and the b-threads that wait for it are
+				// awaken
+				if (busyBThreads == 0) {
+
+					if (error != null){
+						bplog("BProgram terminating: " + error);
+						debugPrint(bt + " resetting program"); /*************/
+//						printEventLog();
+						reset();
+						if (bt.thread != null)
+							bt.bWait(); // so the interrupt in reset() can take affect 
+						else // the bthread is already done
+//							System.out.println(bt + " is null");
+							return;
+//						throw new BPJInterruptingEventException();
+					}
+					
+					// Choose the next event and store it in the global variable lastEvent
+					chooseNextEvent();
+					logTrace();
+					String st;
+					if (lastEvent != null) {
+						eventCounter++;
+						st = new String("Event #" + eventCounter + ": " + lastEvent
+									+ "  requested by  " + bThreadOfLastEvent);
+						bplog(st);
+						
+						// Awake the waiting b-threads (returns a flag that
+						// indicates if this b-thread is awaken, i.e., does not
+						// need
+						// to wait)
+						continueImmediately |= awakeWaitingBThreads(bt);
+					}else{ // lastEvent == null -> deadlock?
+						st = new String("No events chosen. " + bt + " stuck in bsync");
+						debugPrint(st);
+                        System.exit(0);
+					}
+					
+					if (choicePointCounter < eventLogSize)
+						eventLog.add(st); // at position eventCounter
+					else
+						eventLog.set(choicePointCounter % eventLogSize, st);
+						
+				}
+			}
+
+			// If the continueImmediately flag is not on, wait until another
+			// b-thread chooses an event in this b-thread's watched events and
+			// notifies it
+			if (!continueImmediately) {
+
+				// Don't count this b-thread as running for concurrency purposes
+				if (concurrency.control) {
+					debugPrint("Permits="
+							+ concurrency.semaphore.availablePermits() + " "
+							+ bt + " W1");
+					concurrency.semaphore.release();
+
+					debugPrint("Released - Waiting   " + bt + "\n"
+							+ "Permits= "
+							+ concurrency.semaphore.availablePermits() + " "
+							+ bt + " W2");
+				}
+
+				bt.bWait();
+
+				// Count this b-thread as running for concurrency purposes
+				if (concurrency.control) {
+					debugPrint("Permits= "
+							+ concurrency.semaphore.availablePermits() + " "
+							+ bt + " B1");
+					try {
+						concurrency.semaphore.acquire();
+					} catch (Exception e) {
+						throw new BPJSystemErrorException();
+					}
+
+					debugPrint("Acquired - Waking    " + bt + "\n"
+							+ "Permits= "
+							+ concurrency.semaphore.availablePermits() + " "
+							+ bt + " B2");
+
+				}
+			}
+		}
+	}
+
+	/**
+	 * logs the current trace
+	 */
+	void logTrace() {
+		if (lastEvent != null)
+			tracegen.logToVisualizationTrace();
+	}
+
+    /**
+	 * Choose the next event to be fired.
+	 * Save in lastEvent;  
+	 * Save also bThreadOfLastEvent 
+	 * @throws BPJRequestableSetException
+	 */
+	private void chooseNextEvent() throws BPJRequestableSetException {
+        
+        Set<Event> requested = new HashSet<>();
+        Set<EventSetInterface> blocked = new HashSet<>();
+        for ( BThread bt : allBThreads.values() ) {
+            requested.addAll(bt.requestedEvents.getEventList());
+            blocked.add( bt.blockedEvents );
+        }
+        
+        List<Event> requestedAndNotBlocked = new ArrayList<>();
+        for ( Event candidate: requested ) {
+            boolean notBlocked = true;
+            for ( EventSetInterface blocker: blocked ) {
+                if ( blocker.contains(candidate) ) {
+                    notBlocked = false;
+                }
+            }
+            if ( notBlocked ) {
+                requestedAndNotBlocked.add(candidate);
+            }
+        }
+        
+        if ( requestedAndNotBlocked.isEmpty() ) {
+            lastEvent = null;
+        } else {
+//            lastEvent = requestedAndNotBlocked.get(random.nextInt(requestedAndNotBlocked.size()));
+            int idx = Math.abs(random.nextInt())%requestedAndNotBlocked.size();
+            if ( idx < 0 ) idx = 0;
+            lastEvent = requestedAndNotBlocked.get(idx);
+        }
+        
+//		// Reset the last event variables.
+//		lastEvent = null;
+//	    bThreadOfLastEvent = null;
+//		choicePointCounter++;
+//
+//		switch (eventChoicePolicy) {
+//
+//		case LEARNING:
+//			break;
+//		default:
+//			if (!iterativeMode)
+//				chooseNextEventDefault();
+//			else {
+//				chooseNextEventIterative();
+//			}
+//		}
+
+	}
+
+	private void chooseNextEventDefault() throws BPJRequestableSetException {
+
+		EventChoice ec = getNextEventChoice(null, null);
+		if (ec != null) {
+			lastEvent = ec.getEvent(this);
+			bThreadOfLastEvent = allBThreads.get(ec.btID);
+		}
+	}
+
+	private void chooseNextEventIterative() throws BPJRequestableSetException {
+
+		ChoicePoint p;
+
+		if (choicePointCounter < lastBranch) {
+			// The current event is not at the last branch (non-det choice) yet
+			// Repeat previous choice.
+			p = choicePoints.get(choicePointCounter);
+			debugPrint("Event #:" + choicePointCounter + "(repeated): "
+					+ p.currentChoice);
+
+		} else if (choicePointCounter == lastBranch) { // need to move to next event
+			// choice
+			p = choicePoints.get(choicePointCounter);
+			// move to next event choice
+			p.currentChoice = p.nextChoice;
+			// determine new next event choice
+			p.nextChoice = getNextEventChoice(p.currentChoice, p.firstBThread);
+
+			debugPrint("Event #" + choicePointCounter + "(next choice): "
+					+ p.currentChoice);
+
+
+		} else { // eventCounter > lastBranch - explore a new path
+			p = new ChoicePoint();
+			// Choose an event that is requested but not blocked
+
+			p.currentChoice = getNextEventChoice(null, null);
+			if (p.currentChoice != null) {
+				p.firstBThread = p.currentChoice.btID;
+				p.nextChoice = getNextEventChoice(p.currentChoice,
+						p.firstBThread);
+				debugPrint("Event #" + choicePointCounter + "(new): "
+						+ p.currentChoice);
+			}
+
+			if (choicePointCounter < choicePoints.size()) {
+				choicePoints.set(choicePointCounter, p);
+			} else {
+				choicePoints.add(choicePointCounter, p);
+			}
+
+		}
+//		System.out.println("p: "+p); /*************/
+		if (p.currentChoice != null) { // an event was found
+			lastEvent = p.currentChoice.getEvent(this);
+			bThreadOfLastEvent = allBThreads.get(p.currentChoice.btID);
+		}
+
+		if (p.nextChoice != null) { // there are more non-det choices here
+			currentBranch = choicePointCounter;
+			debugPrint("Another choice exists: " + p.nextChoice
+					+ ", currentBranch: " + currentBranch);
+		}
+	}
+
+	/**
+	 * This method is the main event selection algorithm.
+	 * 
+	 * @param ec
+	 *            null by default - start from the beginning. Otherwise
+	 *            EventChoice object pointing to an event where the search
+	 *            should start.
+	 * 
+	 * @param baseBT
+	 *            null by default. Use in iterative mode to set the key of
+	 *            Bthread with the first chosen event, such that all other
+	 *            selections should be of "same" priority - calculated with
+	 *            "epsilon" (since bthread id's must be unique).
+	 *            
+	 * @return an EventChoice to fire, or null if no event found
+	 * 
+	 */
+	public EventChoice getNextEventChoice(EventChoice ec, Double baseBT) {
+		BThread bt;
+		RequestableInterface set;
+		EventChoice startChoice = (ec != null) ? ec :
+			new EventChoice(allBThreads.firstKey(), 0, -1);
+
+		for (Double key = startChoice.btID; key != null; 
+											key = allBThreads.higherKey(key)) {
+			if (baseBT != null)
+				if (key - baseBT > bThreadEpsilon)
+					// (key - p.currentBThread > bThreadEpsilon)
+					return null;
+
+			bt = allBThreads.get(key);
+
+			if (bt.getMonitorOnly())
+				continue;
+
+			for (int i = startChoice.eventSetSeq, n = bt.requestedEvents.size(); i < n; i++) {
+				set = bt.requestedEvents.get(i);
+				for (int j = startChoice.eventSeq + 1, m = set.size(); j < m; j++) {
+					Event e = set.get(j).getEvent();
+					if (!isBlocked(e)) {
+						EventChoice newChoice = new EventChoice(key, i, j);
+						return newChoice;
+					}
+				}
+
+				// When starting from another eventChoice,
+				// we look only in the same set of events.
+				// We don't look for the next event in another set of same
+				// BThread. Move to next bthread.
+				if (ec != null && key.equals(ec.btID))
+					break;
+			}
+
+		}
+		return null;
+	}
+
+	/**
+	 * 
+	 * @return an ArrayList of all enabled events that are requestable
+	 * with the same highest priority 
+	 */
+	public ArrayList<Event> getAllEnabledEvents() {
+		Double baseBT = null;
+		Double recentBT = null;
+		BThread bt;
+		RequestableInterface set;
+		ArrayList<Event> list = new ArrayList<Event>();
+
+		for (Double key = allBThreads.firstKey(); key != null; 
+											key = allBThreads.higherKey(key)) {
+			if (baseBT != null // first event was found
+				&& key - baseBT > bThreadEpsilon)
+					// (key - recentBT > bThreadEpsilon)
+				break;
+
+			bt = allBThreads.get(key);
+
+			if (bt.getMonitorOnly() || bt.requestedEvents == null)
+				continue;
+
+			for (int i = 0, n = bt.requestedEvents.size(); i < n; i++) {
+				set = bt.requestedEvents.get(i);
+				for (int j = 0, m = set.size(); j < m; j++) {
+					Event e = set.get(j).getEvent();
+					if (!isBlocked(e)) {
+						if (baseBT == null)
+							baseBT = key;
+						if (!list.contains(e))
+							list.add(e);
+						recentBT = key;
+					}
+				}
+
+				// When starting from another eventChoice,
+				// we look only in the same set of events.
+				// We don't look for the next event in another set of same
+				// BThread. Move to next bthread.
+				if (key.equals(recentBT))
+					break;
+			}
+
+		}
+		return list;
+	}
+
+	/**
+	 * A function that checks if an event is blocked by some b-thread.
+	 * 
+	 * @param e
+	 *            An event.
+	 * @return true if the event is blocked by some b-thread.
+	 */
+	protected boolean isBlocked(Event e) {
+		for (BThread bt : allBThreads.values()) {
+			if (bt.blockedEvents.contains(e)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Utility function (for debugging purposes) that prints the ordered list of
+	 * active b-threads.
+	 */
+	public void printAllBThreads() {
+		int c = 0;
+		for (BThread bt : allBThreads.values()) {
+			bplog("\t" + (c++) + ":" + bt);
+		}
+	}
+
+	/**
+	 * Start all added b-threads.
+	 */
+	// public void startAll() {
+	// synchronized (syncth_obj) {
+	// syncth_obj.finished = false;
+	// }
+	//
+	// System.out.println("********* Starting " + allBThreads.size()
+	// + " b-threads  **************");
+	//
+	// synchronized (allBThreads) {
+	// for (BThread sc : allBThreads.values()) {
+	// sc.startBThread();
+	// }
+	// }
+	// }
+
+	/**
+	 * sync class, used to identify all b-threads are finished
+	 * 
+	 */
+	private class Syncth_obj_class {
+		public boolean finished;
+	}
+
+	protected Syncth_obj_class syncth_obj = new Syncth_obj_class();
+
+	/**
+	 * Wait for the run to finish
+	 * 
+	 */
+	public void waitForFinish() {
+		synchronized (syncth_obj) {
+			try {
+				while (!syncth_obj.finished)
+					syncth_obj.wait();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+
+	}
+
+	/**
+	 * 
+	 * @return the given bprogram name
+	 */
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	/**
+	 * Start all added scenarios. In default mode this method returns while the
+	 * PBrogram is still running. In iterative mode this method returns only
+	 * after all BThreads of this BProgram terminate (do not use the method
+	 * joinAll() in this mode).
+	 */
+	public void startAll() {
+
+		if (iterativeMode)
+			startIterative();
+
+		else
+			startDefault();
+	}
+
+	// this method returns while the BProgram is still running
+	private void startDefault() {
+
+		bplog("********* Starting " + allBThreads.size()
+				+ " scenarios  **************");
+
+		synchronized (allBThreads) {
+			for (BThread sc : allBThreads.values()) {
+				sc.startBThread();
+			}
+
+			// try {
+			// allBThreads.wait();
+			// } catch (InterruptedException ex) {
+			// System.out.println(ex);
+			// }
+		}
+	}
+
+	// This method returns only after all BThreads of this BProgram terminate
+	// Do not use the method joinAll() together with this method (2 'wait', 1
+	// 'notify')
+	private void startIterative() {
+
+		// do{
+		
+//		lastEventCounter = eventCounter;
+		choicePointCounter = -1;
+		eventCounter = 0;
+		
+		eventLog.clear();
+		error = null;
+
+		// save the deepest level of branching in the last run
+		lastBranch = currentBranch;
+		currentBranch = -1;
+		
+		bplog("\n  ********* Iteration " + ++iter + ": Starting "
+				+ allBThreads.size() + " scenarios  **************");
+
+		synchronized (allBThreads) {
+			for (BThread sc : allBThreads.values()) {
+				sc.startBThread();
+			}
+
+			try {
+				allBThreads.wait();
+			} catch (InterruptedException ex) {
+				System.out.println(ex);
+			}
+		}
+		// } while (currentBranch >= 0);
+	}
+
+	public void reset(){
+//		busyBThreads = allBThreads.size();
+		synchronized (allBThreads) {
+			for (BThread bt : allBThreads.values()) {
+//				Thread t = bt.thread;
+//				if (t != null){ // this check seems unnecessary, since
+					// if t==null then the BThread shouldn't be in allBThreads
+					busyBThreads++;
+//					debugPrint("resetting " + bt);
+//					t.interrupt();
+					bt.thread.interrupt();
+//				}
+//				else
+//					System.out.println(bt + " is null");
+			}
+		}
+	}
+	
+	public boolean hasMoreRuns() {
+		debugPrint("currentBranch: " + currentBranch);
+		return (currentBranch >= 0);
+	}
+
+	public void joinAll() {
+		synchronized (allBThreads) {
+			if (allBThreads.size() == 0)
+				return;
+			try {
+				allBThreads.wait();
+			} catch (InterruptedException ex) {
+				System.out.println(ex);
+			}
+		}
+	}
+
+	public void debugPrint(String s) {
+		if (debugMode)
+			System.out.println("Debug: " + s);
+	}
+
+	public void bplog(String s) {
+		if (logMode)
+			System.out.println(s);
+	}
+
+	public void printEventLog(){
+		
+		System.out.println("\n ***** Printing last " + eventLog.size() + 
+				" choice points out of " +	(choicePointCounter+1) + ":");
+		
+		if (choicePointCounter < eventLogSize)
+			for(String eventString : eventLog)
+				System.out.println(eventString);
+		else
+			for (int i=1; i<=eventLogSize; i++)
+				System.out.println(eventLog.get( (choicePointCounter+i) % eventLogSize));
+		System.out.println("***** end event log ******");
+	}
+}
