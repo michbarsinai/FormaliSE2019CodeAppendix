@@ -48,34 +48,48 @@ link:add-blueberries-repeat.js[]::
 == Execution Examples
 
 === Simple Run
-5 doses of each mixture, just running. link:logs/simple-run.txt[Sample Log]
+5 doses of each mixture, just running.
 
   $ bpjs definitions.js pancake-core.js
 
-=== Run with a limited viscosity. link:logs/limited-run.txt[Sample Log]
+link:logs/simple-run.txt[Sample Log]
+
+=== Run with a limited viscosity.
 
   $ bpjs definitions.js pancake-core.js viscosity-monitor.js viscosity-limiter.js
 
-=== Demonstrate the viscosity-limiter-faulty is indeed faulty link:logs/viscosity-verify-fail.txt[Sample Log]
+link:logs/limited-run.txt[Sample Log]
+
+=== Demonstrate the viscosity-limiter-faulty is indeed faulty
 
   $ bpjs --verify definitions.js pancake-core.js viscosity-monitor.js viscosity-limiter-faulty.js viscosity-verify.js
 
-=== Demonstrate the viscosity-limiter is not faulty link:logs/viscosity-verify.txt[Sample Log]
+link:logs/viscosity-verify-fail.txt[Sample Log]
+
+=== Demonstrate the viscosity-limiter is not faulty
 
   $ bpjs --verify definitions.js pancake-core.js viscosity-monitor.js viscosity-limiter.js viscosity-verify.js
 
+link:logs/viscosity-verify.txt[Sample Log]
+
 === Find cases where blueberries are not added
 
-Looking at blueberry addition as a liveness requirement (note the `--liveness` switch) (link:logs/no-blueberries-live.txt[Sample Log])
+Looking at blueberry addition as a liveness requirement (note the `--liveness` switch) 
 
   $ bpjs --verify --liveness definitions.js pancake-core.js viscosity-monitor.js viscosity-limiter.js add-blueberries.js add-blueberries-verify.js
 
-Looking at blueberry addition as a deadlock issue. This will fail verification due to a deadlock between the b-thread requesting the addition and the b-thread blocking that addition due to batter thickness. This deadlock is an implementation detail, though; the real specification violated here is the fact that blueberries were not added (hot termination). (link:logs/no-blueberries-deadlock.txt[Sample Log])
+link:logs/no-blueberries-live.txt[Sample Log]
+
+Looking at blueberry addition as a deadlock issue. This will fail verification due to a deadlock between the b-thread requesting the addition and the b-thread blocking that addition due to batter thickness. This deadlock is an implementation detail, though; the real specification violated here is the fact that blueberries were not added (hot termination). 
 
   $ bpjs --verify definitions.js pancake-core.js viscosity-monitor.js viscosity-limiter.js add-blueberries.js
+
+link:logs/no-blueberries-deadlock.txt[Sample Log]
 
 === Find an infinite run were blueberries are never added
 
 Using `--max-trace-length` to limit the length of the search, as there are short violating cycles. Using `--full-state-storage` to ensure no hash collisions happen.
 
   $ bpjs  --max-trace-length=100  --full-state-storage --verify  pancake-core-repeat.js  add-blueberries-verify.js add-blueberries-repeat.js
+
+link:logs/hot-bthread-run.txt[Sample Log]
