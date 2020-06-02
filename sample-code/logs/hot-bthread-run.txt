@@ -1,0 +1,36 @@
+Using full state storage
+Max trace length: 100
+Inspections:
+ * Failed Assertions
+ * Hot Terminations
+ * Deadlocks
+ * Hot B-Program Cycles
+Starting verification
+/v/ verification of 'BPjs' started
+ [ OK ] --max-trace-length=100
+ [ OK ] --full-state-storage
+ [ OK ] --verify
+ [ OK ] pancake-core-repeat.js
+ [ OK ] add-blueberries-verify.js
+ [ OK ] add-blueberries-repeat.js
+/v/ Violation found: Hot b-thread cycle violation: b-threads MustAddBlueberries can get to an infinite hot loop. Cycle returns to index 0 because of event [BEvent name:RELEASE_BATTER]
+/v/ verification of BPjs done
+Verification completed.
+Found Violation:
+Hot b-thread cycle violation: b-threads MustAddBlueberries can get to an infinite hot loop. Cycle returns to index 0 because of event [BEvent name:RELEASE_BATTER]
+Counter example trace:
+[BEvent name:ADD_WET]
+[BEvent name:ADD_DRY]
+[BEvent name:ADD_WET]
+[BEvent name:ADD_DRY]
+[BEvent name:ADD_DRY]
+[BEvent name:ADD_DRY]
+[BEvent name:ADD_DRY]
+[BEvent name:ADD_WET]
+[BEvent name:ADD_WET]
+[BEvent name:ADD_WET]
+[BEvent name:RELEASE_BATTER]
+General statistics:
+Time:	1,915 (msec)
+States scanned:	83
+Edges scanned:	175
