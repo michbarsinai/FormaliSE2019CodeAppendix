@@ -60,15 +60,19 @@ link:add-blueberries-repeat.js[]::
 
   $ bpjs --verify definitions.js pancake-core.js viscosity-monitor.js viscosity-limiter-faulty.js viscosity-verify.js
 
+=== Demonstrate the viscosity-limiter is not faulty link:logs/viscosity-verify.txt[Sample Log]
+
+  $ bpjs --verify definitions.js pancake-core.js viscosity-monitor.js viscosity-limiter.js viscosity-verify.js
+
 === Find cases where blueberries are not added
 
-Looking at blueberry addition as a liveness requirement (note the `--liveness` switch)
+Looking at blueberry addition as a liveness requirement (note the `--liveness` switch) (link:logs/no-blueberries-live.txt[Sample Log])
 
-  $  bpjs --verify --liveness pancake-core.js viscosity-monitor.js viscosity-limiter.js add-blueberries.js add-blueberries-verify.js
+  $ bpjs --verify --liveness definitions.js pancake-core.js viscosity-monitor.js viscosity-limiter.js add-blueberries.js add-blueberries-verify.js
 
-Looking at blueberry addition as a deadlock issue (same commandline, but no `--liveness`). This will fail verification due to a deadlock between the b-thread requesting the addition and the b-thread blocking that addition due to batter thickness. This deadlock is an implementation detail, though; the real specification violated here is the fact that blueberries were not added (hot termination).
+Looking at blueberry addition as a deadlock issue. This will fail verification due to a deadlock between the b-thread requesting the addition and the b-thread blocking that addition due to batter thickness. This deadlock is an implementation detail, though; the real specification violated here is the fact that blueberries were not added (hot termination). (link:logs/no-blueberries-deadlock.txt[Sample Log])
 
-  $  bpjs --verify pancake-core.js thickness-monitor.js thickness-limiter.js add-blueberries.js add-blueberries-verify.js
+  $ bpjs --verify definitions.js pancake-core.js viscosity-monitor.js viscosity-limiter.js add-blueberries.js
 
 === Find an infinite run were blueberries are never added
 

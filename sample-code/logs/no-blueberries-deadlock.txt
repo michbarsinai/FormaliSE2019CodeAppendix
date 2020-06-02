@@ -1,0 +1,44 @@
+Max trace length: 1000
+Inspections:
+ * Hot Terminations
+ * Failed Assertions
+ * Deadlocks
+ * Hot B-Program Cycles
+Starting verification
+/v/ verification of 'BPjs' started
+ [ OK ] --verify
+ [ OK ] definitions.js
+ [ OK ] pancake-core.js
+ [ OK ] viscosity-monitor.js
+ [ OK ] viscosity-limiter.js
+ [ OK ] add-blueberries.js
+/v/ Violation found: Deadlock: [BEvent name:ADD_BLUEBERRIES] requested by:{Blueberries} blocked by:{BatterThinEnough}
+/v/ verification of BPjs done
+Verification completed.
+Found Violation:
+Deadlock: [BEvent name:ADD_BLUEBERRIES] requested by:{Blueberries} blocked by:{BatterThinEnough}
+Counter example trace:
+[BEvent name:ADD_WET]
+[BEvent name:Viscosity data:-1.0]
+[BEvent name:ADD_DRY]
+[BEvent name:Viscosity data:0.0]
+[BEvent name:ADD_DRY]
+[BEvent name:Viscosity data:1.0]
+[BEvent name:ADD_WET]
+[BEvent name:Viscosity data:0.0]
+[BEvent name:ADD_WET]
+[BEvent name:Viscosity data:-1.0]
+[BEvent name:ADD_WET]
+[BEvent name:Viscosity data:-2.0]
+[BEvent name:ADD_DRY]
+[BEvent name:Viscosity data:-1.0]
+[BEvent name:ADD_WET]
+[BEvent name:Viscosity data:-2.0]
+[BEvent name:ADD_DRY]
+[BEvent name:Viscosity data:-1.0]
+[BEvent name:ADD_DRY]
+[BEvent name:Viscosity data:0.0]
+General statistics:
+Time:	964 (msec)
+States scanned:	36
+Edges scanned:	39

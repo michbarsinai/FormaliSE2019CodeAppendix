@@ -1,0 +1,45 @@
+Max trace length: 1000
+Inspections:
+ * Hot Terminations
+ * Hot B-Program Cycles
+ * Hot B-Program Cycles
+Starting verification
+/v/ verification of 'BPjs' started
+ [ OK ] --verify
+ [ OK ] --liveness
+ [ OK ] definitions.js
+ [ OK ] pancake-core.js
+ [ OK ] viscosity-monitor.js
+ [ OK ] viscosity-limiter.js
+ [ OK ] add-blueberries.js
+ [ OK ] add-blueberries-verify.js
+/v/ Violation found: Hot Termination - The following b-threads were hot when the b-program ended: MustAddBlueberries
+/v/ verification of BPjs done
+Verification completed.
+Found Violation:
+Hot Termination - The following b-threads were hot when the b-program ended: MustAddBlueberries
+Counter example trace:
+[BEvent name:ADD_DRY]
+[BEvent name:Viscosity data:1.0]
+[BEvent name:ADD_DRY]
+[BEvent name:Viscosity data:2.0]
+[BEvent name:ADD_WET]
+[BEvent name:Viscosity data:1.0]
+[BEvent name:ADD_DRY]
+[BEvent name:Viscosity data:2.0]
+[BEvent name:ADD_WET]
+[BEvent name:Viscosity data:1.0]
+[BEvent name:ADD_DRY]
+[BEvent name:Viscosity data:2.0]
+[BEvent name:ADD_WET]
+[BEvent name:Viscosity data:1.0]
+[BEvent name:ADD_DRY]
+[BEvent name:Viscosity data:2.0]
+[BEvent name:ADD_WET]
+[BEvent name:Viscosity data:1.0]
+[BEvent name:ADD_WET]
+[BEvent name:Viscosity data:0.0]
+General statistics:
+Time:	931 (msec)
+States scanned:	21
+Edges scanned:	20

@@ -23,11 +23,11 @@ bp.registerBThread("EnoughBatterForBlueberries", function(){
 bp.registerBThread("BatterThinEnough", function(){
     var block;
     while ( true ) {
-        var thicknessEvt = bp.sync({
-              waitFor:THICKNESS_EVENTS,
+        var viscosityEvt = bp.sync({
+              waitFor:VISCOSITY_EVENTS,
                 block:block,
             interrupt:BLUEBERRIES
         });
-        block = (thicknessEvt.data >= 0) ? BLUEBERRIES : bp.none;
+        block = (viscosityEvt.data >= 0) ? BLUEBERRIES : bp.none;
     }
 });

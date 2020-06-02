@@ -1,0 +1,21 @@
+Max trace length: 1000
+Inspections:
+ * Hot Terminations
+ * Failed Assertions
+ * Deadlocks
+ * Hot B-Program Cycles
+Starting verification
+/v/ verification of 'BPjs' started
+ [ OK ] --verify
+ [ OK ] definitions.js
+ [ OK ] pancake-core.js
+ [ OK ] viscosity-monitor.js
+ [ OK ] viscosity-limiter.js
+ [ OK ] viscosity-verify.js
+/v/ verification of BPjs done
+Verification completed.
+No violations found
+General statistics:
+Time:	1,624 (msec)
+States scanned:	71
+Edges scanned:	91
