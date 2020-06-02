@@ -6,11 +6,7 @@
 // and announces it using an event.
 //
 ////
-const VISCOSITY_EVENTS = bp.EventSet("Viscosity", function(e){
-  return e.name.contains("Viscosity");
-});
-
-bp.registerBThread("ViscosityMeter", function(){
+bp.registerBThread("ViscosityMonitor", function(){
     let viscosity=0;
     while ( true ) {
       let evt = bp.sync({waitFor:ADDITION_EVENTS});

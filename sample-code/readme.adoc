@@ -1,3 +1,13 @@
+ifndef::env-github[:icons: font]
+ifdef::env-github[]
+:status:
+:outfilesuffix: .adoc
+:caution-caption: :fire:
+:important-caption: :exclamation:
+:note-caption: :paperclip:
+:tip-caption: :bulb:
+:warning-caption: :warning:
+endif::[]
 = Code Examples
 
 [NOTE]
@@ -8,47 +18,53 @@ You must use the uber jar, that contains dependencies used by BPjs (such as Mozi
 
 == Files
 
-pancake-core.js::
-    The two core b-threads, adding dry and wet mixture doses.
+link:definitions.js[]::
+  Common program definitions, such as events and event sets.
 
-thickness-limiter.js::
-    A b-thread that limits the thickness of the batter to have an absolute value less than, or equal to, `THICKNESS_BOUND`. This b-thread announces the current thickness using an event. Additionally, this file contains the definition of the `THICKNESS_EVENTS` event set, and the `THICKNESS_BOUND` value.
+link:pancake-core.js[]::
+  The two core b-threads, adding dry and wet mixture doses.
 
-thickness-limiter-faulty.js::
-    Same as above, but using an off-by-one threshold, dropping the _...or equals to_ clause.
+link:viscosity-monitor.js[]::
+  A b-thread that keeps track of batter viscosity, and publishes it using an event.
 
-add-blueberries.js::
-    Contains a b-thread that adds blueberries, and other b-threads that prevent this addition when the batter is not ready yet.
+link:viscosity-limiter.js[]::
+  A b-thread that limits the viscosity of the batter to have an absolute value less than, or equal to, `VISCOSITY_BOUND`. 
 
-add-blueberries-verify.js::
-    Contains a b-thread that verifies that blueberries were indeed added.
+link:viscosity-limiter-faulty.js[]::
+  Same as above, but using an off-by-one threshold, dropping the _...or equals to_ clause.
 
-pancake-core-repeat.js::
-    The pancake code threads, in an infinite loop. When all the doses are added, a new b-thread requests a `ReleaseBatter` event, and the loop restarts.
+link:add-blueberries.js[]::
+  Contains a b-thread that adds blueberries, and other b-threads that prevent this addition when the batter is not ready yet.
 
-add-blueberries-repeat.js::
-    Simplified version of the blueberry adder, requesting that blueberries will be added (no blockers, as we don't need them for the counter examples here).
+link:add-blueberries-verify.js[]::
+  Contains a b-thread that verifies that blueberries were indeed added.
+
+link:pancake-core-repeat.js[]::
+  The pancake code threads, in an infinite loop. When all the doses are added, a new b-thread requests a `ReleaseBatter` event, and the loop restarts.
+
+link:add-blueberries-repeat.js[]::
+  Simplified version of the blueberry adder, requesting that blueberries will be added (no blockers, as we don't need them for the counter examples here).
 
 == Execution Examples
 
 === Simple Run
-5 doses of each mixture, just running.
+5 doses of each mixture, just running. link:logs/simple-run.txt[Sample Log]
 
-  $ bpjs pancake-core.js
+  $ bpjs definitions.js pancake-core.js
 
-=== Run with a limited thickness
+=== Run with a limited viscosity. link:logs/limited-run.txt[Sample Log]
 
-  $ bpjs pancake-core.js thickness-monitor.js thickness-limiter.js
+  $ bpjs definitions.js pancake-core.js viscosity-monitor.js viscosity-limiter.js
 
-=== Demonstrate the thickness-limiter-faulty is indeed faulty
+=== Demonstrate the viscosity-limiter-faulty is indeed faulty link:logs/viscosity-verify-fail.txt[Sample Log]
 
-  $ bpjs --verify  pancake-core.js thickness-monitor.js thickness-limiter-faulty.js thickness-verify.js
+  $ bpjs --verify definitions.js pancake-core.js viscosity-monitor.js viscosity-limiter-faulty.js viscosity-verify.js
 
 === Find cases where blueberries are not added
 
 Looking at blueberry addition as a liveness requirement (note the `--liveness` switch)
 
-  $  bpjs --verify --liveness pancake-core.js thickness-monitor.js thickness-limiter.js add-blueberries.js add-blueberries-verify.js
+  $  bpjs --verify --liveness pancake-core.js viscosity-monitor.js viscosity-limiter.js add-blueberries.js add-blueberries-verify.js
 
 Looking at blueberry addition as a deadlock issue (same commandline, but no `--liveness`). This will fail verification due to a deadlock between the b-thread requesting the addition and the b-thread blocking that addition due to batter thickness. This deadlock is an implementation detail, though; the real specification violated here is the fact that blueberries were not added (hot termination).
 

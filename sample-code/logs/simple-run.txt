@@ -1,0 +1,19 @@
+---:BPjs Starting
+ [ OK ] definitions.js
+  -:BPjs Added Dry
+  -:BPjs Added Wet
+ [ OK ] pancake-core.js
+---:BPjs Started
+ --:BPjs Event [BEvent name:ADD_WET]
+ --:BPjs Event [BEvent name:ADD_WET]
+ --:BPjs Event [BEvent name:ADD_WET]
+ --:BPjs Event [BEvent name:ADD_DRY]
+ --:BPjs Event [BEvent name:ADD_DRY]
+ --:BPjs Event [BEvent name:ADD_DRY]
+ --:BPjs Event [BEvent name:ADD_DRY]
+ --:BPjs Event [BEvent name:ADD_WET]
+ --:BPjs Event [BEvent name:ADD_WET]
+  -:BPjs Done Wet
+ --:BPjs Event [BEvent name:ADD_DRY]
+  -:BPjs Done Dry
+---:BPjs Ended

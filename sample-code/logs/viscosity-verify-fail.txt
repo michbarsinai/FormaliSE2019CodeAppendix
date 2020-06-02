@@ -1,0 +1,38 @@
+Max trace length: 1000
+Inspections:
+ * Hot Terminations
+ * Failed Assertions
+ * Deadlocks
+ * Hot B-Program Cycles
+Starting verification
+/v/ verification of 'BPjs' started
+ [ OK ] --verify
+ [ OK ] definitions.js
+ [ OK ] pancake-core.js
+ [ OK ] viscosity-monitor.js
+ [ OK ] viscosity-limiter-faulty.js
+ [ OK ] viscosity-verify.js
+/v/ Violation found: Failed assertion on b-thread viscosity-verification: Viscosity out of bounds
+/v/ verification of BPjs done
+Verification completed.
+Found Violation:
+Failed assertion on b-thread viscosity-verification: Viscosity out of bounds
+Counter example trace:
+[BEvent name:ADD_WET]
+[BEvent name:Viscosity data:-1.0]
+[BEvent name:ADD_DRY]
+[BEvent name:Viscosity data:0.0]
+[BEvent name:ADD_DRY]
+[BEvent name:Viscosity data:1.0]
+[BEvent name:ADD_WET]
+[BEvent name:Viscosity data:0.0]
+[BEvent name:ADD_WET]
+[BEvent name:Viscosity data:-1.0]
+[BEvent name:ADD_WET]
+[BEvent name:Viscosity data:-2.0]
+[BEvent name:ADD_WET]
+[BEvent name:Viscosity data:-3.0]
+General statistics:
+Time:	1,031 (msec)
+States scanned:	43
+Edges scanned:	48

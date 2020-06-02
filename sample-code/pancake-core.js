@@ -1,7 +1,7 @@
 /* global bp */
 
-var ADD_DRY = bp.Event("ADD_DRY");
-var ADD_WET = bp.Event("ADD_WET");
+// var ADD_DRY = bp.Event("ADD_DRY");
+// var ADD_WET = bp.Event("ADD_WET");
 
 var DOSE_COUNT = 5;
 

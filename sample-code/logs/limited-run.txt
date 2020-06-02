@@ -1,0 +1,34 @@
+---:BPjs Starting
+ [ OK ] definitions.js
+  -:BPjs Added Dry
+  -:BPjs Added Wet
+ [ OK ] pancake-core.js
+  -:BPjs Added ViscosityMonitor
+ [ OK ] viscosity-monitor.js
+  -:BPjs Added ViscosityLimiter
+ [ OK ] viscosity-limiter.js
+---:BPjs Started
+ --:BPjs Event [BEvent name:ADD_WET]
+ --:BPjs Event [BEvent name:Viscosity data:-1.0]
+ --:BPjs Event [BEvent name:ADD_DRY]
+ --:BPjs Event [BEvent name:Viscosity data:0.0]
+ --:BPjs Event [BEvent name:ADD_WET]
+ --:BPjs Event [BEvent name:Viscosity data:-1.0]
+ --:BPjs Event [BEvent name:ADD_DRY]
+ --:BPjs Event [BEvent name:Viscosity data:0.0]
+ --:BPjs Event [BEvent name:ADD_WET]
+ --:BPjs Event [BEvent name:Viscosity data:-1.0]
+ --:BPjs Event [BEvent name:ADD_DRY]
+ --:BPjs Event [BEvent name:Viscosity data:0.0]
+ --:BPjs Event [BEvent name:ADD_WET]
+ --:BPjs Event [BEvent name:Viscosity data:-1.0]
+ --:BPjs Event [BEvent name:ADD_WET]
+  -:BPjs Done Wet
+ --:BPjs Event [BEvent name:Viscosity data:-2.0]
+ --:BPjs Event [BEvent name:ADD_DRY]
+ --:BPjs Event [BEvent name:Viscosity data:-1.0]
+ --:BPjs Event [BEvent name:ADD_DRY]
+  -:BPjs Done Dry
+ --:BPjs Event [BEvent name:Viscosity data:0.0]
+---:BPjs No Event Selected
+---:BPjs Ended

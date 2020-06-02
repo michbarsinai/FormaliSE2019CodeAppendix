@@ -10,10 +10,3 @@ link:sample-code[]::
 link:performance-meters[]::
   Contains code for measuring the performance of BPjs, and for comparing this performance to related works.
 
-
-[NOTE]
-All code in this examples assume that you have bpjs in the `$PATH` environment variable. As an alternative, one can replace the `bpjs` command with `java -jar BPjs-0.9.7.uber.jar` (or any other version later than 0.9.7).
-
-[WARNING]
-You must use the uber jar, that contains dependencies used by BPjs (such as Mozilla Rhino).
-
