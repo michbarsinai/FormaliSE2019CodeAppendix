@@ -1,27 +1,16 @@
-ifndef::env-github[:icons: font]
-ifdef::env-github[]
-:status:
-:outfilesuffix: .adoc
-:caution-caption: :fire:
-:important-caption: :exclamation:
-:note-caption: :page_with_curl:
-:tip-caption: :bulb:
-:warning-caption: :warning:
-endif::[]
+# Performance Measurements
 
-= Performance Measurements
-
-== Content
+## Content
 
 
-link:GUI%20MazeRunner[GUI MazeRunner]::
+* [GUI MazeRunner](GUI%20MazeRunner):
     GUI application for editing, running, and analyzing maze simulations. It also demonstrates how to use BPjs to embed a b-program in a traditional application.
 
-link:PerformanceTester[]::
+* [PerformanceTester](PerformanceTester):
     Code for an experiment measuring the performance of BPjs as a verification engine for b-programs.
 
-link:BPJ+JPF[]::
+* [BPJ+JPF](BPJ+JPF):
     Code for an experiment measuring the performance of BPJ and NASA's JavaPathFinder as a verification engine for b-programs.
 
-link:README.adoc[]::
+* [README.md](README.md):
     `this` file.
